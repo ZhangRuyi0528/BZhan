@@ -95,3 +95,11 @@ export interface HeatmapResponse {
   timestamp: number;
   pb_data: string;
 }
+
+export interface DanmakuItem {
+  time: number;       // 秒（float），弹幕出现时间
+  mode: 1 | 4 | 5;   // 1=滚动, 4=底部固定, 5=顶部固定
+  fontSize: number;
+  color: number;      // 0xRRGGBB 十进制整数
+  text: string;
+}

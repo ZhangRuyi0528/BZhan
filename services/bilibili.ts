@@ -1,12 +1,17 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import type { VideoItem, Comment, PlayUrlResponse, QRCodeInfo, VideoShotData, HeatmapResponse } from './types';
+import type { VideoItem, Comment, PlayUrlResponse, QRCodeInfo, VideoShotData, HeatmapResponse, DanmakuItem } from './types';
 import { signWbi } from '../utils/wbi';
+import { parseDanmakuXml } from '../utils/danmaku';
 
 const isWeb = Platform.OS === 'web';
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const BASE     = isWeb ? 'http://localhost:3001/bilibili-api'      : 'https://api.bilibili.com';
 const PASSPORT = isWeb ? 'http://localhost:3001/bilibili-passport' : 'https://passport.bilibili.com';
+const COMMENT_BASE = isWeb
+  ? 'http://localhost:3001/bilibili-comment'
+  : 'https://comment.bilibili.com';
 
 function generateBuvid3(): string {
   const h = () => Math.floor(Math.random() * 16).toString(16);
@@ -30,7 +35,7 @@ const api = axios.create({
     'Accept':          'application/json, text/plain, */*',
     'Accept-Language': 'zh-CN,zh;q=0.9',
   } : {
-    'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'User-Agent':      UA,
     'Referer':         'https://www.bilibili.com',
     'Origin':          'https://www.bilibili.com',
     'Accept':          'application/json, text/plain, */*',
@@ -165,4 +170,15 @@ export async function pollQRCode(qrcode_key: string): Promise<{ code: number; co
     }
   }
   return { code, cookie };
+}
+
+export async function getDanmaku(cid: number): Promise<DanmakuItem[]> {
+  try {
+    const res = await axios.get(`${COMMENT_BASE}/x/v1/dm/list.so`, {
+      params: { oid: cid },
+      headers: isWeb ? {} : { Referer: 'https://www.bilibili.com', 'User-Agent': UA },
+      responseType: 'text',
+    });
+    return parseDanmakuXml(res.data as string);
+  } catch { return []; }
 }

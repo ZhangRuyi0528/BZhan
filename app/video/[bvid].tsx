@@ -8,6 +8,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoPlayer } from '../../components/VideoPlayer';
 import { CommentItem } from '../../components/CommentItem';
+import { getDanmaku } from '../../services/bilibili';
+import { DanmakuItem } from '../../services/types';
+import DanmakuList from '../../components/DanmakuList';
 import { useVideoDetail } from '../../hooks/useVideoDetail';
 import { useComments } from '../../hooks/useComments';
 import { useVideoStore } from '../../store/videoStore';
@@ -22,6 +25,9 @@ export default function VideoDetailScreen() {
   const { video, playData, loading: videoLoading, qualities, currentQn, changeQuality } = useVideoDetail(bvid as string);
   const { comments, loading: cmtLoading, load: loadComments } = useComments(video?.aid ?? 0);
   const [tab, setTab] = useState<Tab>('comments');
+  const [danmakus, setDanmakus] = useState<DanmakuItem[]>([]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [showDanmakuList, setShowDanmakuList] = useState(true);
   const { setVideo, clearVideo } = useVideoStore();
 
   useEffect(() => {
@@ -31,6 +37,11 @@ export default function VideoDetailScreen() {
   useEffect(() => {
     if (video?.aid) loadComments();
   }, [video?.aid]);
+
+  useEffect(() => {
+    if (!video?.cid) return;
+    getDanmaku(video.cid).then(setDanmakus);
+  }, [video?.cid]);
 
   function handleMiniPlayer() {
     if (video) {
@@ -59,6 +70,15 @@ export default function VideoDetailScreen() {
         onMiniPlayer={handleMiniPlayer}
         bvid={bvid as string}
         cid={video?.cid}
+        danmakus={danmakus}
+        onTimeUpdate={setCurrentTime}
+      />
+
+      <DanmakuList
+        danmakus={danmakus}
+        currentTime={currentTime}
+        visible={showDanmakuList}
+        onToggle={() => setShowDanmakuList(v => !v)}
       />
 
       <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>

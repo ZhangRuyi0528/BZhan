@@ -1,18 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  View, StyleSheet, Dimensions, TouchableOpacity, TouchableWithoutFeedback,
-  Text, Modal, Image, PanResponder,
+  View, StyleSheet, TouchableOpacity, TouchableWithoutFeedback,
+  Text, Modal, Image, PanResponder, useWindowDimensions,
 } from 'react-native';
 import Video, { VideoRef } from 'react-native-video';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import type { PlayUrlResponse, VideoShotData } from '../services/types';
+import type { PlayUrlResponse, VideoShotData, DanmakuItem } from '../services/types';
 import { buildDashMpdUri } from '../utils/dash';
 import { getHeatmap, getVideoShot } from '../services/bilibili';
+import DanmakuOverlay from './DanmakuOverlay';
 
-const { width: SCREEN_W } = Dimensions.get('window');
-//  16:9 视频区域高度，适配不同屏幕宽度
-const VIDEO_H = SCREEN_W * 0.5625;
 const BAR_H = 3;
 // 进度球尺寸
 const BALL = 12;
@@ -120,12 +118,19 @@ interface Props {
   style?: object;
   bvid?: string;
   cid?: number;
+  danmakus?: DanmakuItem[];
+  isFullscreen?: boolean;
+  onTimeUpdate?: (t: number) => void;
+  initialTime?: number;
 }
 
 export function NativeVideoPlayer({
   playData, qualities, currentQn, onQualityChange, onFullscreen, onMiniPlayer, style,
-  bvid, cid,
+  bvid, cid, danmakus, isFullscreen, onTimeUpdate, initialTime,
 }: Props) {
+  const { width: SCREEN_W, height: SCREEN_H } = useWindowDimensions();
+  const VIDEO_H = SCREEN_W * 0.5625;
+
   const [resolvedUrl, setResolvedUrl] = useState<string | undefined>();
   const isDash = !!playData?.dash;
 
@@ -143,12 +148,13 @@ export function NativeVideoPlayer({
   const isSeekingRef = useRef(false);
   const [touchX, setTouchX] = useState<number | null>(null);
   const barOffsetX = useRef(0);
-  const barWidthRef = useRef(SCREEN_W);
+  const barWidthRef = useRef(300);
   const trackRef = useRef<View>(null);
 
   const [heatSegments, setHeatSegments] = useState<number[]>([]);
   const [shots, setShots] = useState<VideoShotData | null>(null);
   const [shotTimestamps, setShotTimestamps] = useState<number[]>([]);
+  const [showDanmaku, setShowDanmaku] = useState(true);
 
   const videoRef = useRef<VideoRef>(null);
   const currentDesc = qualities.find(q => q.qn === currentQn)?.desc ?? String(currentQn || 'HD');
@@ -324,10 +330,26 @@ export function NativeVideoPlayer({
           onProgress={({ currentTime: ct, seekableDuration: dur }) => {
             setCurrentTime(ct);
             if (dur > 0) setDuration(dur);
+            onTimeUpdate?.(ct);
+          }}
+          onLoad={() => {
+            if (initialTime && initialTime > 0) {
+              videoRef.current?.seek(initialTime);
+            }
           }}
         />
       ) : (
         <View style={styles.placeholder} />
+      )}
+
+      {isFullscreen && !!danmakus?.length && (
+        <DanmakuOverlay
+          danmakus={danmakus}
+          currentTime={currentTime}
+          screenWidth={SCREEN_W}
+          screenHeight={SCREEN_H}
+          visible={showDanmaku}
+        />
       )}
 
       {/* Permanent transparent tap layer — always above Video so taps always reach it */}
@@ -400,6 +422,11 @@ export function NativeVideoPlayer({
               <TouchableOpacity style={styles.ctrlBtn} onPress={() => setShowQuality(true)}>
                 <Text style={styles.qualityText}>{currentDesc}</Text>
               </TouchableOpacity>
+              {isFullscreen && (
+                <TouchableOpacity style={styles.ctrlBtn} onPress={() => setShowDanmaku(v => !v)}>
+                  <Ionicons name={showDanmaku ? 'chatbubbles' : 'chatbubbles-outline'} size={16} color="#fff" />
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.ctrlBtn} onPress={onFullscreen}>
                 <Ionicons name="expand" size={16} color="#fff" />
               </TouchableOpacity>
@@ -436,7 +463,7 @@ export function NativeVideoPlayer({
 }
 
 const styles = StyleSheet.create({
-  container: { width: SCREEN_W, height: VIDEO_H, backgroundColor: '#000' },
+  container: { backgroundColor: '#000' },
   placeholder: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000' },
   topBar: {
     position: 'absolute', top: 0, left: 0, right: 0, height: 56,
