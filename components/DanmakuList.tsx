@@ -58,7 +58,9 @@ export default function DanmakuList({ danmakus, currentTime, visible, onToggle }
             </Text>
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>暂无弹幕</Text>
+            <Text style={styles.empty}>
+              {danmakus.length === 0 ? '暂无弹幕' : '弹幕将随视频播放显示'}
+            </Text>
           }
         />
       )}

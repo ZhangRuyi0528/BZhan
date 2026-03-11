@@ -314,7 +314,7 @@ export function NativeVideoPlayer({
   };
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, { width: SCREEN_W, height: VIDEO_H }, style]}>
       {resolvedUrl ? (
         <Video
           key={resolvedUrl}
