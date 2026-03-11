@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -39,6 +39,7 @@ export default function HomeScreen() {
   const [visibleBigKey, setVisibleBigKey] = useState<string | null>(null);
   const rows = useMemo(() => toListRows(videos), [videos]);
 
+  // useRef-wrapped to satisfy FlatList's requirement that onViewableItemsChanged never changes identity after mount
   const onViewableItemsChangedRef = useRef(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const bigRow = viewableItems.find(
@@ -61,7 +62,7 @@ export default function HomeScreen() {
     load();
   }, []);
 
-  const renderItem = ({ item: row }: { item: ListRow }) => {
+  const renderItem = useCallback(({ item: row }: { item: ListRow }) => {
     if (row.type === 'big') {
       return (
         <BigVideoCard
@@ -72,6 +73,7 @@ export default function HomeScreen() {
       );
     }
     // Normal pair row
+    const right = row.right;
     return (
       <View style={styles.row}>
         <View style={styles.leftCol}>
@@ -80,17 +82,17 @@ export default function HomeScreen() {
             onPress={() => router.push(`/video/${row.left.bvid}` as any)}
           />
         </View>
-        {row.right && (
+        {right && (
           <View style={styles.rightCol}>
             <VideoCard
-              item={row.right}
-              onPress={() => router.push(`/video/${row.right!.bvid}` as any)}
+              item={right}
+              onPress={() => router.push(`/video/${right.bvid}` as any)}
             />
           </View>
         )}
       </View>
     );
-  };
+  }, [visibleBigKey]);
 
   return (
     <SafeAreaView style={styles.safe} edges={["left", "right"]}>
