@@ -27,6 +27,7 @@ interface Props {
 export function BigVideoCard({ item, isVisible, onPress }: Props) {
   const { width: SCREEN_W } = useWindowDimensions();
   const THUMB_H = SCREEN_W * 0.5625;
+  const mediaDimensions = { width: SCREEN_W - 8, height: THUMB_H };
 
   const [videoUrl, setVideoUrl] = useState<string | undefined>();
   const [isDash, setIsDash] = useState(false);
@@ -72,6 +73,7 @@ export function BigVideoCard({ item, isVisible, onPress }: Props) {
         console.warn('BigVideoCard: failed to load play URL', e);
       }
     })();
+    // videoUrl intentionally excluded — re-fetch guard prevents redundant fetches after URL is set
   }, [isVisible, item.bvid]);
 
   // Pause/resume when visibility changes
@@ -97,12 +99,12 @@ export function BigVideoCard({ item, isVisible, onPress }: Props) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       {/* Media area */}
-      <View style={{ width: SCREEN_W - 8, height: THUMB_H, position: 'relative' }}>
+      <View style={[mediaDimensions, { position: 'relative' }]}>
         {/* Thumbnail */}
         <Animated.View style={[StyleSheet.absoluteFill, { opacity: thumbOpacity }]}>
           <Image
             source={{ uri: proxyImageUrl(item.pic) }}
-            style={{ width: SCREEN_W - 8, height: THUMB_H }}
+            style={mediaDimensions}
             resizeMode="cover"
           />
         </Animated.View>
