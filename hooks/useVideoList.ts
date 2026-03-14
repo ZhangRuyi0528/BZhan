@@ -28,7 +28,7 @@ export function useVideoList() {
       setPages(prev => reset ? [data] : [...prev, data]);
       if (reset || idx === 0) {
         // Take top 2 by online count
-        const sorted = [...live].sort((a, b) => b.online - a.online).slice(0, 2);
+        const sorted = [...live].sort((a, b) => b.online - a.online).slice(0, 10);
         setLiveRooms(sorted);
       }
       freshIdxRef.current = idx + 1;

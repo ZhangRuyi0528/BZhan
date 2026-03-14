@@ -146,6 +146,8 @@ export function BigVideoCard({ item, isVisible, onPress }: Props) {
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gs) =>
         Math.abs(gs.dx) > SWIPE_THRESHOLD && Math.abs(gs.dx) > Math.abs(gs.dy),
+      onMoveShouldSetPanResponderCapture: (_, gs) =>
+        Math.abs(gs.dx) > SWIPE_THRESHOLD && Math.abs(gs.dx) > Math.abs(gs.dy),
       onPanResponderGrant: () => {
         seekingRef.current = true;
         swipeStartTime.current = currentTimeRef.current;
@@ -255,23 +257,25 @@ export function BigVideoCard({ item, isVisible, onPress }: Props) {
         )}
       </View>
 
-      {/* Progress bar between video and info */}
-      {videoUrl && duration > 0 && (
-        <View style={styles.progressTrack}>
-          <View
-            style={[
-              styles.progressLayer,
-              { width: `${bufferedRatio * 100}%` as any, backgroundColor: "rgba(0,174,236,0.25)" },
-            ]}
-          />
-          <View
-            style={[
-              styles.progressLayer,
-              { width: `${progressRatio * 100}%` as any, backgroundColor: "#00AEEC" },
-            ]}
-          />
-        </View>
-      )}
+      {/* Progress bar between video and info — always rendered to avoid height jump */}
+      <View style={styles.progressTrack}>
+        {videoUrl && duration > 0 && (
+          <>
+            <View
+              style={[
+                styles.progressLayer,
+                { width: `${bufferedRatio * 100}%` as any, backgroundColor: "rgba(0,174,236,0.25)" },
+              ]}
+            />
+            <View
+              style={[
+                styles.progressLayer,
+                { width: `${progressRatio * 100}%` as any, backgroundColor: "#00AEEC" },
+              ]}
+            />
+          </>
+        )}
+      </View>
 
       {/* Info */}
       <View style={styles.info}>

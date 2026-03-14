@@ -18,24 +18,35 @@ const CARD_WIDTH = (width - 14) / 2;
 
 interface Props {
   item: LiveRoom;
+  isLivePulse?: Boolean;
   onPress?: () => void;
+  fullWidth?: boolean;
 }
 
-export function LiveCard({ item, onPress }: Props) {
+export function LiveCard({
+  item,
+  onPress,
+  fullWidth,
+  isLivePulse = false,
+}: Props) {
+  const cardWidth = fullWidth ? width - 8 : CARD_WIDTH;
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { width: cardWidth }]}
       onPress={onPress}
       activeOpacity={0.85}
     >
       <View style={styles.thumbContainer}>
         <Image
           source={{ uri: proxyImageUrl(item.cover) }}
-          style={styles.thumb}
+          style={[
+            styles.thumb,
+            { width: cardWidth, height: cardWidth * 0.5625 },
+          ]}
           resizeMode="cover"
         />
         <View style={styles.liveBadge}>
-          <LivePulse />
+          {isLivePulse && <LivePulse />}
           <Text style={styles.liveBadgeText}>直播中</Text>
         </View>
         <View style={styles.meta}>

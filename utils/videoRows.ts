@@ -21,7 +21,7 @@ export type ListRow = NormalRow | BigRow | LiveRow;
 
 export function toListRows(pages: VideoItem[][], liveRooms?: LiveRoom[]): ListRow[] {
   const rows: ListRow[] = [];
-  let liveInjected = false;
+  let roomIdx = 0;
 
   for (const chunk of pages) {
     if (chunk.length === 0) continue;
@@ -37,26 +37,24 @@ export function toListRows(pages: VideoItem[][], liveRooms?: LiveRoom[]): ListRo
     const bigItem = chunk[bigIdx];
     const rest = chunk.filter((_, i) => i !== bigIdx);
 
-    rows.push({ type: 'big', item: bigItem });
-
-    const pairs: NormalRow[] = [];
+    const pairs: (NormalRow | LiveRow)[] = [];
     for (let i = 0; i < rest.length; i += 2) {
       pairs.push({ type: 'pair', left: rest[i], right: rest[i + 1] ?? null });
     }
 
-    // Inject LiveRow once, after ~3 pairs in the first chunk
-    if (!liveInjected && liveRooms && liveRooms.length > 0) {
-      const insertAt = Math.min(3, pairs.length);
-      const liveRow: LiveRow = {
+    // Inject 1 LiveRow per chunk at a deterministic position (seed = first video aid)
+    if (liveRooms && roomIdx < liveRooms.length && pairs.length > 0) {
+      const seed = chunk[0]?.aid ?? 0;
+      const insertAt = seed % (pairs.length + 1);
+      pairs.splice(insertAt, 0, {
         type: 'live',
-        left: liveRooms[0],
-        right: liveRooms[1],
-      };
-      pairs.splice(insertAt, 0, liveRow as any);
-      liveInjected = true;
+        left: liveRooms[roomIdx],
+      });
+      roomIdx++;
     }
 
     rows.push(...pairs);
+    rows.push({ type: 'big', item: bigItem });
   }
   return rows;
 }
