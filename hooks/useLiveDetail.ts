@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getLiveRoomDetail, getLiveAnchorInfo, getLiveStreamUrl } from '../services/bilibili';
 import type { LiveRoomDetail, LiveAnchorInfo, LiveStreamInfo } from '../services/types';
 
@@ -33,7 +33,7 @@ export function useLiveDetail(roomId: number) {
         ]);
         if (cancelled) return;
 
-        let stream: LiveStreamInfo = { hlsUrl: '', flvUrl: '', qn: 0 };
+        let stream: LiveStreamInfo = { hlsUrl: '', flvUrl: '', qn: 0, qualities: [] };
         if (room.live_status === 1) {
           stream = await getLiveStreamUrl(roomId);
         }
@@ -50,5 +50,12 @@ export function useLiveDetail(roomId: number) {
     return () => { cancelled = true; };
   }, [roomId]);
 
-  return state;
+  const changeQuality = useCallback(async (qn: number) => {
+    try {
+      const stream = await getLiveStreamUrl(roomId, qn);
+      setState(prev => ({ ...prev, stream }));
+    } catch { /* ignore */ }
+  }, [roomId]);
+
+  return { ...state, changeQuality };
 }

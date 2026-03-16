@@ -40,7 +40,7 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
 
-// index[i] = timestamp (seconds) for frame i. Returns frame number (position i), not index value.
+// Binary search in shots index to find frame number for given seek time
 function findFrameByTime(index: number[], seekTime: number): number {
   let lo = 0, hi = index.length - 1;
   while (lo < hi) {
@@ -299,6 +299,7 @@ export function NativeVideoPlayer({
     const sheetUrl = image[sheetIdx].startsWith("//")
       ? `https:${image[sheetIdx]}`
       : image[sheetIdx];
+      console.log(sheetUrl,'sheetUrlsheetUrl')
     return (
       <View
         style={[styles.thumbPreview, { left: absLeft, width: DW }]}

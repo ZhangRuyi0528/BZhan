@@ -35,6 +35,13 @@ export default function RootLayout() {
               gestureDirection: "horizontal",
             }}
           />
+          <Stack.Screen
+            name="search"
+            options={{
+              animation: "slide_from_right",
+              gestureEnabled: true,
+            }}
+          />
         </Stack>
         <MiniPlayer />
       </View>

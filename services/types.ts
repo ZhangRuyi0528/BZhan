@@ -153,4 +153,5 @@ export interface LiveStreamInfo {
   hlsUrl: string;
   flvUrl: string;
   qn: number;
+  qualities: { qn: number; desc: string }[];
 }

@@ -195,51 +195,48 @@ export default function HomeScreen() {
   const visibleBigKeyRef = useRef(visibleBigKey);
   visibleBigKeyRef.current = visibleBigKey;
 
-  const renderItem = useCallback(
-    ({ item: row }: { item: ListRow }) => {
-      if (row.type === "big") {
-        return (
-          <BigVideoCard
-            item={row.item}
-            isVisible={visibleBigKeyRef.current === row.item.bvid}
-            onPress={() => router.push(`/video/${row.item.bvid}` as any)}
-          />
-        );
-      }
-      if (row.type === "live") {
-        return (
-          <View style={styles.liveRow}>
-            <LiveCard
-              isLivePulse
-              item={row.left}
-              fullWidth
-              onPress={() => router.push(`/live/${row.left.roomid}` as any)}
-            />
-          </View>
-        );
-      }
-      const right = row.right;
+  const renderItem = useCallback(({ item: row }: { item: ListRow }) => {
+    if (row.type === "big") {
       return (
-        <View style={styles.row}>
-          <View style={styles.leftCol}>
-            <VideoCard
-              item={row.left}
-              onPress={() => router.push(`/video/${row.left.bvid}` as any)}
-            />
-          </View>
-          {right && (
-            <View style={styles.rightCol}>
-              <VideoCard
-                item={right}
-                onPress={() => router.push(`/video/${right.bvid}` as any)}
-              />
-            </View>
-          )}
+        <BigVideoCard
+          item={row.item}
+          isVisible={visibleBigKeyRef.current === row.item.bvid}
+          onPress={() => router.push(`/video/${row.item.bvid}` as any)}
+        />
+      );
+    }
+    if (row.type === "live") {
+      return (
+        <View style={styles.liveRow}>
+          <LiveCard
+            isLivePulse
+            item={row.left}
+            fullWidth
+            onPress={() => router.push(`/live/${row.left.roomid}` as any)}
+          />
         </View>
       );
-    },
-    [],
-  );
+    }
+    const right = row.right;
+    return (
+      <View style={styles.row}>
+        <View style={styles.leftCol}>
+          <VideoCard
+            item={row.left}
+            onPress={() => router.push(`/video/${row.left.bvid}` as any)}
+          />
+        </View>
+        {right && (
+          <View style={styles.rightCol}>
+            <VideoCard
+              item={right}
+              onPress={() => router.push(`/video/${right.bvid}` as any)}
+            />
+          </View>
+        )}
+      </View>
+    );
+  }, []);
 
   const renderLiveItem = useCallback(
     ({ item }: { item: { left: LiveRoom; right?: LiveRoom } }) => (
@@ -426,11 +423,16 @@ export default function HomeScreen() {
                 />
               )}
             </TouchableOpacity>
-            {/* <TouchableOpacity style={styles.headerBtn}>
-              <Ionicons name="search" size={22} color="#212121" />
-            </TouchableOpacity> */}
           </View>
-          <Text style={styles.logo}>哔哩哔哩</Text>
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => router.push("/search" as any)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="search" size={14} color="#999" />
+            <Text style={styles.searchPlaceholder}>搜索视频、UP主...</Text>
+          </TouchableOpacity>
+          <Text style={styles.logo}>哔</Text>
         </Animated.View>
 
         <View style={styles.tabRow}>
@@ -482,8 +484,8 @@ const styles = StyleSheet.create({
     height: HEADER_H,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
+    gap: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#eee",
   },
@@ -492,6 +494,22 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     color: "#00AEEC",
     letterSpacing: -0.5,
+    width: 72,
+  },
+  searchBar: {
+    flex: 1,
+    height: 30,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    gap: 5,
+  },
+  searchPlaceholder: {
+    fontSize: 13,
+    color: "#999",
+    flex: 1,
   },
   headerRight: { flexDirection: "row", gap: 8, alignItems: "center" },
   headerBtn: { paddingLeft: 0 },

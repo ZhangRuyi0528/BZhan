@@ -94,7 +94,6 @@ export async function getRecommendFeed(freshIdx = 0): Promise<VideoItem[]> {
   );
   const res = await api.get('/x/web-interface/wbi/index/top/feed/rcmd', { params: signed });
   const items: any[] = res.data.data?.item ?? [];
-  console.log(items,'items')
   return items
     .filter(item => item.goto === 'av' && item.bvid && item.title)
     .map(item => ({
@@ -259,15 +258,19 @@ export async function getLiveAnchorInfo(roomId: number): Promise<LiveAnchorInfo>
   return { uid: info.uid, uname: info.uname, face: info.face } as LiveAnchorInfo;
 }
 
-export async function getLiveStreamUrl(roomId: number): Promise<LiveStreamInfo> {
+export async function getLiveStreamUrl(roomId: number, qn = 10000): Promise<LiveStreamInfo> {
   try {
     const res = await api.get(`${LIVE_BASE}/xlive/web-room/v2/index/getRoomPlayInfo`, {
-      params: { room_id: roomId, protocol: '0,1', format: '0,1,2', codec: '0', qn: 10000 },
+      params: { room_id: roomId, protocol: '0,1', format: '0,1,2', codec: '0', qn },
     });
-    const streams: any[] = res.data?.data?.playurl_info?.playurl?.stream ?? [];
+    const playurl = res.data?.data?.playurl_info?.playurl;
+    const streams: any[] = playurl?.stream ?? [];
+    const gQnDesc: any[] = playurl?.g_qn_desc ?? [];
+    const qualities = gQnDesc.map((q: any) => ({ qn: q.qn as number, desc: q.desc as string }));
+
     let hlsUrl = '';
     let flvUrl = '';
-    let qn = 0;
+    let currentQn = 0;
 
     const hlsStream = streams.find(s => s.protocol_name === 'http_hls');
     if (hlsStream) {
@@ -276,7 +279,7 @@ export async function getLiveStreamUrl(roomId: number): Promise<LiveStreamInfo> 
       const urlInfo = codec?.url_info?.[0];
       if (urlInfo) {
         hlsUrl = urlInfo.host + codec.base_url;
-        qn = codec.current_qn ?? 0;
+        currentQn = codec.current_qn ?? 0;
       }
     }
 
@@ -290,10 +293,48 @@ export async function getLiveStreamUrl(roomId: number): Promise<LiveStreamInfo> 
       }
     }
 
-    return { hlsUrl, flvUrl, qn };
+    return { hlsUrl, flvUrl, qn: currentQn, qualities };
   } catch {
-    return { hlsUrl: '', flvUrl: '', qn: 0 };
+    return { hlsUrl: '', flvUrl: '', qn: 0, qualities: [] };
   }
+}
+
+function parseDuration(s: string): number {
+  const parts = s.split(':').map(Number);
+  return parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0] * 3600 + parts[1] * 60 + parts[2];
+}
+
+export async function searchVideos(keyword: string, page = 1): Promise<VideoItem[]> {
+  const { imgKey, subKey } = await getWbiKeys();
+  const signed = signWbi(
+    { keyword, search_type: 'video', page, page_size: 20 },
+    imgKey,
+    subKey,
+  );
+  const res = await api.get('/x/web-interface/wbi/search/type', { params: signed });
+  const results: any[] = res.data.data?.result ?? [];
+  return results
+    .filter((item: any) => item.bvid && item.title)
+    .map((item: any) => ({
+      bvid: item.bvid,
+      aid: item.aid ?? 0,
+      title: item.title.replace(/<[^>]+>/g, ''),
+      pic: item.pic ? (item.pic.startsWith('//') ? `https:${item.pic}` : item.pic) : '',
+      owner: { mid: item.mid ?? 0, name: item.author ?? '', face: '' },
+      stat: {
+        view: item.play ?? 0,
+        danmaku: item.video_review ?? 0,
+        reply: item.review ?? 0,
+        like: 0,
+        coin: 0,
+        favorite: 0,
+      },
+      duration: item.duration ? parseDuration(item.duration) : 0,
+      desc: item.description ?? '',
+      cid: 0,
+      pages: [],
+      ugc_season: undefined,
+    } as VideoItem));
 }
 
 export async function getDanmaku(cid: number): Promise<DanmakuItem[]> {

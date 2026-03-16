@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useLiveDetail } from '../../hooks/useLiveDetail';
+import { useLiveDanmaku } from '../../hooks/useLiveDanmaku';
 import { LivePlayer } from '../../components/LivePlayer';
+import DanmakuList from '../../components/DanmakuList';
 import { formatCount } from '../../utils/format';
 import { proxyImageUrl } from '../../utils/imageUrl';
 
@@ -20,10 +22,15 @@ export default function LiveDetailScreen() {
   const { roomId } = useLocalSearchParams<{ roomId: string }>();
   const router = useRouter();
   const id = parseInt(roomId ?? '0', 10);
-  const { room, anchor, stream, loading, error } = useLiveDetail(id);
+  const { room, anchor, stream, loading, error, changeQuality } = useLiveDetail(id);
+  const [danmakuVisible, setDanmakuVisible] = useState(true);
 
   const isLive = room?.live_status === 1;
   const hlsUrl = stream?.hlsUrl ?? '';
+  const qualities = stream?.qualities ?? [];
+  const currentQn = stream?.qn ?? 0;
+
+  const danmakus = useLiveDanmaku(isLive ? id : 0);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -38,7 +45,13 @@ export default function LiveDetailScreen() {
       </View>
 
       {/* Player */}
-      <LivePlayer hlsUrl={hlsUrl} isLive={isLive} />
+      <LivePlayer
+        hlsUrl={hlsUrl}
+        isLive={isLive}
+        qualities={qualities}
+        currentQn={currentQn}
+        onQualityChange={changeQuality}
+      />
 
       {/* Content */}
       {loading ? (
@@ -46,63 +59,74 @@ export default function LiveDetailScreen() {
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : room ? (
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-          {/* Room title */}
-          <View style={styles.titleSection}>
-            <Text style={styles.title}>{room.title}</Text>
-            <View style={styles.metaRow}>
-              {/* Live status */}
-              {isLive ? (
-                <View style={styles.livePill}>
-                  <View style={styles.liveDot} />
-                  <Text style={styles.livePillText}>直播中</Text>
+        <View style={styles.content}>
+          <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+            {/* Room title */}
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>{room.title}</Text>
+              <View style={styles.metaRow}>
+                {/* Live status */}
+                {isLive ? (
+                  <View style={styles.livePill}>
+                    <View style={styles.liveDot} />
+                    <Text style={styles.livePillText}>直播中</Text>
+                  </View>
+                ) : (
+                  <View style={[styles.livePill, styles.offlinePill]}>
+                    <Text style={[styles.livePillText, styles.offlinePillText]}>未开播</Text>
+                  </View>
+                )}
+                {/* Online count */}
+                <View style={styles.onlineRow}>
+                  <Ionicons name="eye-outline" size={13} color="#999" />
+                  <Text style={styles.onlineText}>{formatCount(room.online)}</Text>
                 </View>
-              ) : (
-                <View style={[styles.livePill, styles.offlinePill]}>
-                  <Text style={[styles.livePillText, styles.offlinePillText]}>未开播</Text>
-                </View>
-              )}
-              {/* Online count */}
-              <View style={styles.onlineRow}>
-                <Ionicons name="eye-outline" size={13} color="#999" />
-                <Text style={styles.onlineText}>{formatCount(room.online)}</Text>
+              </View>
+              {/* Area tags */}
+              <View style={styles.areaRow}>
+                {room.parent_area_name ? (
+                  <Text style={styles.areaTag}>{room.parent_area_name}</Text>
+                ) : null}
+                {room.area_name ? (
+                  <Text style={styles.areaTag}>{room.area_name}</Text>
+                ) : null}
               </View>
             </View>
-            {/* Area tags */}
-            <View style={styles.areaRow}>
-              {room.parent_area_name ? (
-                <Text style={styles.areaTag}>{room.parent_area_name}</Text>
-              ) : null}
-              {room.area_name ? (
-                <Text style={styles.areaTag}>{room.area_name}</Text>
-              ) : null}
-            </View>
-          </View>
 
-          {/* Divider */}
-          <View style={styles.divider} />
+            {/* Divider */}
+            <View style={styles.divider} />
 
-          {/* Anchor row */}
-          {anchor && (
-            <View style={styles.anchorRow}>
-              <Image
-                source={{ uri: proxyImageUrl(anchor.face) }}
-                style={styles.avatar}
-              />
-              <Text style={styles.anchorName}>{anchor.uname}</Text>
-              <TouchableOpacity style={styles.followBtn}>
-                <Text style={styles.followTxt}>+ 关注</Text>
-              </TouchableOpacity>
-            </View>
-          )}
+            {/* Anchor row */}
+            {anchor && (
+              <View style={styles.anchorRow}>
+                <Image
+                  source={{ uri: proxyImageUrl(anchor.face) }}
+                  style={styles.avatar}
+                />
+                <Text style={styles.anchorName}>{anchor.uname}</Text>
+                <TouchableOpacity style={styles.followBtn}>
+                  <Text style={styles.followTxt}>+ 关注</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
-          {/* Room description */}
-          {!!room.description && (
-            <View style={styles.descBox}>
-              <Text style={styles.descText}>{room.description}</Text>
-            </View>
-          )}
-        </ScrollView>
+            {/* Room description */}
+            {!!room.description && (
+              <View style={styles.descBox}>
+                <Text style={styles.descText}>{room.description}</Text>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Live danmaku list */}
+          <DanmakuList
+            danmakus={danmakus}
+            currentTime={999999}
+            visible={danmakuVisible}
+            onToggle={() => setDanmakuVisible(v => !v)}
+            style={styles.danmakuList}
+          />
+        </View>
       ) : null}
     </SafeAreaView>
   );
@@ -128,6 +152,7 @@ const styles = StyleSheet.create({
   },
   loader: { marginVertical: 30 },
   errorText: { textAlign: 'center', color: '#f00', padding: 20 },
+  content: { flex: 1 },
   scroll: { flex: 1 },
   titleSection: { padding: 14 },
   title: {
@@ -184,4 +209,5 @@ const styles = StyleSheet.create({
   followTxt: { color: '#fff', fontSize: 12, fontWeight: '600' },
   descBox: { padding: 14, paddingTop: 4 },
   descText: { fontSize: 14, color: '#555', lineHeight: 22 },
+  danmakuList: { maxHeight: 220 },
 });

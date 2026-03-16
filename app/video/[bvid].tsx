@@ -37,7 +37,6 @@ export default function VideoDetailScreen() {
     changeQuality,
   } = useVideoDetail(bvid as string);
   const [commentSort, setCommentSort] = useState<0 | 2>(2);
-  const flatListHeightRef = useRef(0);
   const {
     comments,
     loading: cmtLoading,
@@ -174,12 +173,6 @@ export default function VideoDetailScreen() {
             renderItem={({ item }) => <CommentItem item={item} />}
             onEndReached={() => { if (cmtHasMore && !cmtLoading) loadComments(); }}
             onEndReachedThreshold={0.3}
-            onLayout={({ nativeEvent }) => { flatListHeightRef.current = nativeEvent.layout.height; }}
-            onContentSizeChange={(_, contentHeight) => {
-              if (contentHeight < flatListHeightRef.current && cmtHasMore && !cmtLoading) {
-                loadComments();
-              }
-            }}
             showsVerticalScrollIndicator={false}
             ListHeaderComponent={
               <View style={styles.sortRow}>
@@ -240,11 +233,14 @@ function SeasonSection({
   useEffect(() => {
     if (currentIndex <= 0 || episodes.length === 0) return;
     // 等布局完成再滚动
+    const t = setTimeout(() => {
       listRef.current?.scrollToIndex({
         index: currentIndex,
         viewPosition: 0.5, // 居中
         animated: false,
       });
+    }, 200);
+    return () => clearTimeout(t);
   }, [currentIndex, episodes.length]);
 
   return (
@@ -414,9 +410,9 @@ const styles = StyleSheet.create({
   },
   sortLabel: { fontSize: 13, color: "#999", marginRight: 4 },
   sortBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 3,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },

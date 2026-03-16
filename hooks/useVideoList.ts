@@ -13,14 +13,17 @@ export function useVideoList() {
   const freshIdxRef = useRef(0);
 
   const load = useCallback(async (reset = false) => {
-    if (loadingRef.current) return;
+    if (loadingRef.current) {
+      if (reset) setRefreshing(false);
+      return;
+    }
     loadingRef.current = true;
-    const idx = reset ? 0 : freshIdxRef.current;
+    const idx = freshIdxRef.current;
     setLoading(true);
     try {
       const promises: [Promise<VideoItem[]>, Promise<LiveRoom[]>] = [
         getRecommendFeed(idx),
-        reset || idx === 0
+        (reset || idx === 0)
           ? getLiveList(1, 0).catch(() => [] as LiveRoom[])
           : Promise.resolve([] as LiveRoom[]),
       ];
@@ -42,11 +45,11 @@ export function useVideoList() {
   }, []); // stable — no stale closure risk
 
   const refresh = useCallback(() => {
+    console.log('Refreshing video list');
     setRefreshing(true);
     load(true);
   }, [load]);
 
   const videos = useMemo(() => pages.flat(), [pages]);
-
   return { videos, pages, liveRooms, loading, refreshing, load, refresh };
 }
