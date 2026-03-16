@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { File, Directory, Paths } from "expo-file-system";
 import { formatDuration } from "../utils/format";
 import {
   View,
@@ -41,44 +40,6 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, v));
 }
 
-function decodePvBuffer(bytes: Uint8Array): number[] {
-  // B站 pvdata 格式：packed uint16 little-endian，每个值 = 帧时间戳（单位：10ms）
-  const result: number[] = [];
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-
-  for (let i = 0; i + 1 < bytes.byteLength; i += 2) {
-    // uint16 值除以 100 转换为秒
-    result.push(view.getUint16(i, true) / 100);
-  }
-
-  return result;
-}
-
-async function loadPvData(url: string): Promise<number[]> {
-  const realUrl = url.startsWith("//") ? `https:${url}` : url;
-  const cacheDir = new Directory(Paths.cache, "bili_pvdata");
-  if (!cacheDir.exists) {
-    await cacheDir.create({ intermediates: true });
-  }
-  const downloadedFile = await File.downloadFileAsync(realUrl, cacheDir, {
-    headers: HEADERS,
-    idempotent: true,
-  });
-  const bytes: Uint8Array = await downloadedFile.bytes();
-  return decodePvBuffer(bytes);
-}
-
-function findFrameIdx(timestamps: number[], seekTime: number): number {
-  if (!timestamps.length) return 0;
-  let lo = 0,
-    hi = timestamps.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (timestamps[mid] <= seekTime) lo = mid;
-    else hi = mid - 1;
-  }
-  return lo;
-}
 
 interface Props {
   playData: PlayUrlResponse | null;
@@ -131,12 +92,13 @@ export function NativeVideoPlayer({
   const [isSeeking, setIsSeeking] = useState(false);
   const isSeekingRef = useRef(false);
   const [touchX, setTouchX] = useState<number | null>(null);
+  const touchXRef = useRef<number | null>(null);
+  const rafRef = useRef<number | null>(null);
   const barOffsetX = useRef(0);
   const barWidthRef = useRef(300);
   const trackRef = useRef<View>(null);
 
   const [shots, setShots] = useState<VideoShotData | null>(null);
-  const [shotTimestamps, setShotTimestamps] = useState<number[]>([]);
   const [showDanmaku, setShowDanmaku] = useState(true);
 
   const videoRef = useRef<VideoRef>(null);
@@ -167,11 +129,7 @@ export function NativeVideoPlayer({
       if (cancelled) return;
       if (shotData?.image?.length) {
         setShots(shotData);
-        if (shotData.pvdata) {
-          loadPvData(shotData.pvdata)
-            .then((r) => setShotTimestamps(r))
-            .catch(() => setShotTimestamps([]));
-        }
+        console.log(shotData.index,'缩略图长度')
       }
     });
     return () => {
@@ -232,12 +190,28 @@ export function NativeVideoPlayer({
         setIsSeeking(true);
         setShowControls(true);
         if (hideTimer.current) clearTimeout(hideTimer.current);
-        setTouchX(clamp(gs.x0 - barOffsetX.current, 0, barWidthRef.current));
+        const x = clamp(gs.x0 - barOffsetX.current, 0, barWidthRef.current);
+        touchXRef.current = x;
+        setTouchX(x);
       },
       onPanResponderMove: (_, gs) => {
-        setTouchX(clamp(gs.moveX - barOffsetX.current, 0, barWidthRef.current));
+        touchXRef.current = clamp(
+          gs.moveX - barOffsetX.current,
+          0,
+          barWidthRef.current,
+        );
+        if (!rafRef.current) {
+          rafRef.current = requestAnimationFrame(() => {
+            setTouchX(touchXRef.current);
+            rafRef.current = null;
+          });
+        }
       },
       onPanResponderRelease: (_, gs) => {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
         const ratio = clamp(
           (gs.moveX - barOffsetX.current) / barWidthRef.current,
           0,
@@ -246,6 +220,7 @@ export function NativeVideoPlayer({
         const t = ratio * durationRef.current;
         videoRef.current?.seek(t);
         setCurrentTime(t);
+        touchXRef.current = null;
         setTouchX(null);
         isSeekingRef.current = false;
         setIsSeeking(false);
@@ -256,6 +231,11 @@ export function NativeVideoPlayer({
         );
       },
       onPanResponderTerminate: () => {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+        touchXRef.current = null;
         setTouchX(null);
         isSeekingRef.current = false;
         setIsSeeking(false);
@@ -278,22 +258,20 @@ export function NativeVideoPlayer({
       img_x_len,
       img_y_len,
       image,
+      index,
     } = shots;
     const framesPerSheet = img_x_len * img_y_len;
     const totalFrames = framesPerSheet * image.length;
-
-    // Use pvdata timestamps for accurate frame lookup; fall back to linear interpolation
     const seekTime = touchRatio * duration;
-    const rawIdx =
-      shotTimestamps.length > 0
-        ? findFrameIdx(shotTimestamps, seekTime)
-        : Math.floor(touchRatio * (totalFrames - 1));
-    const frameIdx = clamp(rawIdx, 0, totalFrames - 1);
+    const frameIdx = index?.length && duration > 0
+      ? clamp(index[clamp(Math.floor(seekTime / duration * index.length), 0, index.length - 1)], 0, totalFrames - 1)
+      : clamp(Math.floor(touchRatio * (totalFrames - 1)), 0, totalFrames - 1);
 
     const sheetIdx = Math.floor(frameIdx / framesPerSheet);
     const local = frameIdx % framesPerSheet;
     const col = local % img_x_len;
     const row = Math.floor(local / img_x_len);
+    console.log('[thumb]', { seekTime, duration, indexLen: index?.length, frameIdx, totalFrames, sheetIdx, col, row });
 
     // Scale sprite frame to display size
     const scale = THUMB_DISPLAY_W / TW;

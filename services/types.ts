@@ -92,7 +92,8 @@ export interface VideoShotData {
   img_x_size: number;
   img_y_size: number;
   image: string[];
-  pvdata?: string; // base64 protobuf: packed float32 timestamps (seconds) per frame
+  index: number[]; // frame index per second: index[t] = frame idx at second t
+  pvdata?: string;
 }
 
 export interface DanmakuItem {
