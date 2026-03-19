@@ -10,15 +10,18 @@
     "proxy": "node dev-proxy.js"
   },
   "dependencies": {
+    "@dr.pogodin/react-native-static-server": "^0.26.0",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "axios": "^1.13.6",
     "expo": "~55.0.5",
     "expo-av": "^16.0.8",
+    "expo-clipboard": "~55.0.9",
     "expo-dev-client": "~55.0.11",
     "expo-file-system": "~55.0.10",
     "expo-linear-gradient": "~55.0.8",
     "expo-media-library": "~55.0.10",
+    "expo-network": "~55.0.9",
     "expo-router": "~55.0.4",
     "expo-screen-orientation": "~55.0.8",
     "expo-status-bar": "~55.0.4",

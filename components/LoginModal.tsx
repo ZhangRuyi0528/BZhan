@@ -112,8 +112,8 @@ export function LoginModal({ visible, onClose }: Props) {
       Alert.alert("已保存", "二维码已存入相册，请用哔哩哔哩扫码登录", [
         { text: "关闭", style: "cancel" },
         {
-          text: "打开哔哩哔哩扫一扫",
-          onPress: () => Linking.openURL("bilibili://scan"),
+          text: "打开哔哩哔哩",
+          onPress: () => Linking.openURL("bilibili://"),
         },
       ]);
     } catch {

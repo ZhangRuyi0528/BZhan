@@ -21,7 +21,6 @@ export function VideoPlayer({ playData, qualities, currentQn, onQualityChange, b
   const [fullscreen, setFullscreen] = useState(false);
   const { width, height } = useWindowDimensions();
   const VIDEO_HEIGHT = width * 0.5625;
-  // In Expo Go ScreenOrientation is unavailable; simulate landscape via CSS transform
   const needsRotation = !ScreenOrientation && fullscreen;
   const lastTimeRef = useRef(0);
   const portraitRef = useRef<NativeVideoPlayerRef>(null);
@@ -33,8 +32,9 @@ export function VideoPlayer({ playData, qualities, currentQn, onQualityChange, b
   };
 
   const handleExitFullscreen = async () => {
-    // Seek portrait player to current position before it becomes visible again
+    // 退出全屏：同步进度，竖屏一律暂停
     portraitRef.current?.seek(lastTimeRef.current);
+    portraitRef.current?.setPaused(true);
     setFullscreen(false);
     if (Platform.OS !== 'web')
       await ScreenOrientation?.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);

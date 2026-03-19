@@ -18,6 +18,7 @@ import Video from 'react-native-video';
 let ScreenOrientation: typeof import('expo-screen-orientation') | null = null;
 try { ScreenOrientation = require('expo-screen-orientation'); } catch {}
 import { useDownloadStore, DownloadTask } from '../store/downloadStore';
+import { LanShareModal } from '../components/LanShareModal';
 
 function formatFileSize(bytes?: number): string {
   if (!bytes || bytes <= 0) return '';
@@ -32,6 +33,7 @@ export default function DownloadsScreen() {
   const { tasks, loadFromStorage, removeTask } = useDownloadStore();
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const [playingTitle, setPlayingTitle] = useState('');
+  const [shareTask, setShareTask] = useState<(DownloadTask & { key: string }) | null>(null);
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
 
@@ -89,12 +91,19 @@ export default function DownloadsScreen() {
                 if (item.localUri) openPlayer(item.localUri, item.title);
               }}
               onDelete={() => removeTask(item.key)}
+              onShare={() => setShareTask(item)}
             />
           )}
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           contentContainerStyle={{ paddingBottom: 32 }}
         />
       )}
+
+      <LanShareModal
+        visible={!!shareTask}
+        task={shareTask}
+        onClose={() => setShareTask(null)}
+      />
 
       {/* Local file player modal */}
       <Modal
@@ -134,10 +143,12 @@ function DownloadRow({
   task,
   onPlay,
   onDelete,
+  onShare,
 }: {
   task: DownloadTask & { key: string };
   onPlay: () => void;
   onDelete: () => void;
+  onShare: () => void;
 }) {
   return (
     <View style={styles.row}>
@@ -165,10 +176,15 @@ function DownloadRow({
       </View>
       <View style={styles.actions}>
         {task.status === 'done' && (
-          <TouchableOpacity style={styles.playBtn} onPress={onPlay}>
-            <Ionicons name="play-circle" size={20} color="#00AEEC" />
-            <Text style={styles.playTxt}>播放</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity style={styles.playBtn} onPress={onPlay}>
+              <Ionicons name="play-circle" size={20} color="#00AEEC" />
+              <Text style={styles.playTxt}>播放</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.shareBtn} onPress={onShare}>
+              <Ionicons name="share-social-outline" size={20} color="#00AEEC" />
+            </TouchableOpacity>
+          </>
         )}
         <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
           <Ionicons name="trash-outline" size={18} color="#bbb" />
@@ -230,6 +246,7 @@ const styles = StyleSheet.create({
   actions: { alignItems: 'center', gap: 8 },
   playBtn: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   playTxt: { fontSize: 13, color: '#00AEEC' },
+  shareBtn: { padding: 4 },
   deleteBtn: { padding: 4 },
   separator: { height: StyleSheet.hairlineWidth, backgroundColor: '#f0f0f0', marginLeft: 108 },
   // player modal

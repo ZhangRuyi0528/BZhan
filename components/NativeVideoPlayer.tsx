@@ -60,6 +60,7 @@ function findFrameByTime(index: number[], seekTime: number): number {
 
 export interface NativeVideoPlayerRef {
   seek: (t: number) => void;
+  setPaused: (v: boolean) => void;
 }
 
 interface Props {
@@ -131,6 +132,9 @@ export const NativeVideoPlayer = forwardRef<NativeVideoPlayerRef, Props>(
     useImperativeHandle(ref, () => ({
       seek: (t: number) => {
         videoRef.current?.seek(t);
+      },
+      setPaused: (v: boolean) => {
+        setPaused(v);
       },
     }));
 
@@ -547,7 +551,7 @@ export const NativeVideoPlayer = forwardRef<NativeVideoPlayerRef, Props>(
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity style={styles.ctrlBtn} onPress={onFullscreen}>
-                  <Ionicons name="expand" size={16} color="#fff" />
+                  <Ionicons name="expand" size={18} color="#fff" />
                 </TouchableOpacity>
               </View>
             </LinearGradient>
