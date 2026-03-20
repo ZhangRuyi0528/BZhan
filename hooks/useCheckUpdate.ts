@@ -102,19 +102,23 @@ export function useCheckUpdate() {
       await downloadResumable.downloadAsync();
       setDownloadProgress(null);
 
-      try {
-        await triggerInstall(localUri);
-      } catch {
-        // 无安装未知来源权限，引导用户开启后手动重试
-        Alert.alert(
-          '需要安装权限',
-          '请在打开的设置页中，为 JKVideo 开启「允许安装未知应用」，然后回来再次点击「下载安装」。',
-          [
-            { text: '取消', style: 'cancel' },
-            { text: '去设置', onPress: openInstallSettings },
-          ]
-        );
-      }
+      // Android 8.0+ 需要用户在系统设置中为本应用开启「安装未知应用」权限。
+      // 系统拒绝时不会抛出 JS 异常，因此下载完成后主动引导。
+      Alert.alert(
+        '下载完成，准备安装',
+        '如果点击「安装」后提示无权限，请先点击「去设置」，为 JKVideo 开启「允许安装未知应用」，然后返回重试。',
+        [
+          { text: '去设置', onPress: openInstallSettings },
+          {
+            text: '安装',
+            onPress: () => {
+              triggerInstall(localUri).catch((e: any) => {
+                Alert.alert('安装失败', e?.message ?? '请在设置中开启「安装未知应用」权限后重试');
+              });
+            },
+          },
+        ]
+      );
     } catch (e: any) {
       setDownloadProgress(null);
       Alert.alert('下载失败', e?.message ?? '请稍后重试');
