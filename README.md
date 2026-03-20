@@ -90,7 +90,7 @@ Android · iOS · Web，Expo Go 扫码 5 分钟运行，Dev Build 解锁完整 D
 > 部分清晰度受限，视频播放降级为 WebView 方案
 
 ```bash
-git clone https://github.com/你的用户名/JKVideo.git
+git clone https://github.com/tiajinsha/JKVideo.git
 cd JKVideo
 npm install
 npx expo start
