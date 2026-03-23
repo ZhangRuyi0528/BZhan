@@ -46,7 +46,7 @@ https://github.com/tiajinsha/JKVideo/releases/download/v1.0.0/6490dcd9dba9a243a7
 ## 功能亮点
 
 🎬 **DASH 完整播放**
-Bilibili DASH 流 → `buildDashMpdUri()` 生成本地 MPD → ExoPlayer 原生解码，支持 1080P+ 4K HDR
+Bilibili DASH 流 → `buildDashMpdUri()` 生成本地 MPD → ExoPlayer 原生解码，支持 1080P + 4K HDR杜比视界
 
 💬 **完整弹幕系统**
 视频弹幕 XML 时间轴同步 + 5 车道飘屏覆盖；直播弹幕 WebSocket 实时接收 + 舰长标记 + 礼物计数
