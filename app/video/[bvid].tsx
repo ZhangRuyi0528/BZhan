@@ -75,14 +75,21 @@ export default function VideoDetailScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={[styles.topTitle, { color: theme.text }]} numberOfLines={1}>
+        <Text
+          style={[styles.topTitle, { color: theme.text }]}
+          numberOfLines={1}
+        >
           {video?.title ?? "视频详情"}
         </Text>
         <TouchableOpacity
           style={styles.miniBtn}
           onPress={() => setShowDownload(true)}
         >
-          <Ionicons name="cloud-download-outline" size={22} color={theme.text} />
+          <Ionicons
+            name="cloud-download-outline"
+            size={22}
+            color={theme.text}
+          />
         </TouchableOpacity>
       </View>
 
@@ -115,7 +122,11 @@ export default function VideoDetailScreen() {
             onPress={() => setTab("intro")}
           >
             <Text
-              style={[styles.tabLabel, { color: theme.textSub }, tab === "intro" && styles.tabActive]}
+              style={[
+                styles.tabLabel,
+                { color: theme.textSub },
+                tab === "intro" && styles.tabActive,
+              ]}
             >
               简介
             </Text>
@@ -126,7 +137,11 @@ export default function VideoDetailScreen() {
             onPress={() => setTab("comments")}
           >
             <Text
-              style={[styles.tabLabel, { color: theme.textSub }, tab === "comments" && styles.tabActive]}
+              style={[
+                styles.tabLabel,
+                { color: theme.textSub },
+                tab === "comments" && styles.tabActive,
+              ]}
             >
               评论
               {video.stat?.reply > 0 ? ` ${formatCount(video.stat.reply)}` : ""}
@@ -138,7 +153,11 @@ export default function VideoDetailScreen() {
             onPress={() => setTab("danmaku")}
           >
             <Text
-              style={[styles.tabLabel, { color: theme.textSub }, tab === "danmaku" && styles.tabActive]}
+              style={[
+                styles.tabLabel,
+                { color: theme.textSub },
+                tab === "danmaku" && styles.tabActive,
+              ]}
             >
               弹幕
               {danmakus.length > 0 ? ` ${formatCount(danmakus.length)}` : ""}
@@ -170,13 +189,25 @@ export default function VideoDetailScreen() {
                       source={{ uri: proxyImageUrl(video.owner.face) }}
                       style={styles.avatar}
                     />
-                    <Text style={[styles.upName, { color: theme.text }]}>{video.owner.name}</Text>
+                    <Text style={[styles.upName, { color: theme.text }]}>
+                      {video.owner.name}
+                    </Text>
                     <TouchableOpacity style={styles.followBtn}>
                       <Text style={styles.followTxt}>+ 关注</Text>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.titleSection, { borderBottomColor: theme.border }]}>
-                    <Text style={[styles.title, { color: theme.text }]}>{video.title}</Text>
+                  <View
+                    style={[
+                      styles.titleSection,
+                      { borderBottomColor: theme.border },
+                    ]}
+                  >
+                    <Text style={[styles.title, { color: theme.text }]}>
+                      {video.title}
+                    </Text>
+                    <Text style={[styles.subTitle, { color: theme.text }]}>
+                      {video.desc || "暂无简介"}
+                    </Text>
                     <View style={styles.statsRow}>
                       <StatBadge icon="play" count={video.stat.view} />
                       <StatBadge icon="heart" count={video.stat.like} />
@@ -193,23 +224,42 @@ export default function VideoDetailScreen() {
                       }
                     />
                   )}
-                  <View style={styles.descBox}>
-                    <Text style={[styles.descText, { color: theme.text }]}>
-                      {video.desc || "暂无简介"}
+                  <View
+                    style={[
+                      styles.relatedHeader,
+                      {
+                        backgroundColor: theme.card,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.relatedHeaderText, { color: theme.text }]}
+                    >
+                      推荐视频
                     </Text>
-                  </View>
-                  <View style={[styles.relatedHeader, { backgroundColor: theme.bg, borderTopColor: theme.border }]}>
-                    <Text style={[styles.relatedHeaderText, { color: theme.text }]}>推荐视频</Text>
                   </View>
                 </>
               }
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={[styles.relatedCard, { backgroundColor: theme.card, borderBottomColor: theme.border }]}
+                  style={[
+                    styles.relatedCard,
+                    {
+                      borderTopWidth: StyleSheet.hairlineWidth,
+                      borderTopColor: theme.border,
+                      backgroundColor: theme.card,
+                      borderBottomColor: theme.border,
+                    },
+                  ]}
                   onPress={() => router.push(`/video/${item.bvid}` as any)}
                   activeOpacity={0.85}
                 >
-                  <View style={[styles.relatedThumbWrap, { backgroundColor: theme.card }]}>
+                  <View
+                    style={[
+                      styles.relatedThumbWrap,
+                      { backgroundColor: theme.card },
+                    ]}
+                  >
                     <Image
                       source={{ uri: proxyImageUrl(item.pic) }}
                       style={styles.relatedThumb}
@@ -222,7 +272,10 @@ export default function VideoDetailScreen() {
                     </View>
                   </View>
                   <View style={styles.relatedInfo}>
-                    <Text style={[styles.relatedTitle, { color: theme.text }]} numberOfLines={2}>
+                    <Text
+                      style={[styles.relatedTitle, { color: theme.text }]}
+                      numberOfLines={2}
+                    >
                       {item.title}
                     </Text>
                     <View
@@ -267,7 +320,9 @@ export default function VideoDetailScreen() {
               onEndReachedThreshold={0.3}
               showsVerticalScrollIndicator={false}
               ListHeaderComponent={
-                <View style={[styles.sortRow, { borderBottomColor: theme.border }]}>
+                <View
+                  style={[styles.sortRow, { borderBottomColor: theme.border }]}
+                >
                   <Text style={styles.sortLabel}>排序</Text>
                   <TouchableOpacity
                     style={[
@@ -372,9 +427,16 @@ function SeasonSection({
   }, [currentIndex, episodes.length]);
 
   return (
-    <View style={[styles.seasonBox, { borderTopColor: theme.border }]}>
+    <View
+      style={[
+        styles.seasonBox,
+        { borderTopColor: theme.border, backgroundColor: theme.card },
+      ]}
+    >
       <View style={styles.seasonHeader}>
-        <Text style={[styles.seasonTitle, { color: theme.text }]}>合集 · {season.title}</Text>
+        <Text style={[styles.seasonTitle, { color: theme.text }]}>
+          合集 · {season.title}
+        </Text>
         <Text style={styles.seasonCount}>{season.ep_count}个视频</Text>
         <Ionicons name="chevron-forward" size={14} color="#999" />
       </View>
@@ -395,7 +457,11 @@ function SeasonSection({
           const isCurrent = ep.bvid === currentBvid;
           return (
             <TouchableOpacity
-              style={[styles.epCard, { backgroundColor: theme.bg }, isCurrent && styles.epCardActive]}
+              style={[
+                styles.epCard,
+                { backgroundColor: theme.card },
+                isCurrent && styles.epCardActive,
+              ]}
               onPress={() => !isCurrent && onEpisodePress(ep.bvid)}
               activeOpacity={0.8}
             >
@@ -408,7 +474,10 @@ function SeasonSection({
               <Text style={[styles.epNum, isCurrent && styles.epNumActive]}>
                 第{index + 1}集
               </Text>
-              <Text style={[styles.epTitle, { color: theme.text }]} numberOfLines={2}>
+              <Text
+                style={[styles.epTitle, { color: theme.text }]}
+                numberOfLines={2}
+              >
                 {ep.title}
               </Text>
             </TouchableOpacity>
@@ -445,6 +514,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     lineHeight: 22,
+    marginBottom: 8,
+  },
+  subTitle: {
+    fontSize: 10,
     marginBottom: 8,
   },
   statsRow: { flexDirection: "row", gap: 16 },
@@ -522,9 +595,9 @@ const styles = StyleSheet.create({
   danmakuTab: { flex: 1 },
   emptyTxt: { textAlign: "center", color: "#bbb", padding: 30 },
   relatedHeader: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingLeft: 12,
+    paddingBottom: 8,
+    paddingTop: 8,
   },
   relatedHeaderText: {
     fontSize: 13,

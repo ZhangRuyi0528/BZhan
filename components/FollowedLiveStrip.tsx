@@ -65,7 +65,7 @@ export function FollowedLiveStrip() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#f4f4f4",
-    paddingHorizontal: 12,
+    paddingHorizontal: 3,
     paddingVertical: 8,
   },
   scrollContent: {
