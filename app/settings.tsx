@@ -5,12 +5,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useTheme } from '../utils/theme';
 import { useCheckUpdate } from '../hooks/useCheckUpdate';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { isLoggedIn, logout } = useAuthStore();
-  const { coverQuality, setCoverQuality } = useSettingsStore();
+  const { darkMode, setDarkMode, trafficSaving, setTrafficSaving } = useSettingsStore();
+  const theme = useTheme();
   const { currentVersion, isChecking, downloadProgress, checkUpdate } = useCheckUpdate();
 
   const handleLogout = async () => {
@@ -19,25 +21,25 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.topBar}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
+      <View style={[styles.topBar, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#212121" />
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>设置</Text>
+        <Text style={[styles.topTitle, { color: theme.text }]}>设置</Text>
         <View style={styles.spacer} />
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>版本信息</Text>
+      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.sectionLabel, { color: theme.textSub }]}>版本信息</Text>
         <View style={styles.versionRow}>
-          <Text style={styles.versionLabel}>当前版本</Text>
-          <Text style={styles.versionValue}>v{currentVersion}</Text>
+          <Text style={[styles.versionLabel, { color: theme.text }]}>当前版本</Text>
+          <Text style={[styles.versionValue, { color: theme.textSub }]}>v{currentVersion}</Text>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>更新</Text>
+      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.sectionLabel, { color: theme.textSub }]}>更新</Text>
         <TouchableOpacity
           style={styles.updateBtn}
           onPress={checkUpdate}
@@ -57,28 +59,49 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>封面图清晰度</Text>
+      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.sectionLabel, { color: theme.textSub }]}>外观</Text>
         <View style={styles.optionRow}>
           <TouchableOpacity
-            style={[styles.option, coverQuality === 'hd' && styles.optionActive]}
-            onPress={() => setCoverQuality('hd')}
+            style={[styles.option, !darkMode && styles.optionActive]}
+            onPress={() => setDarkMode(false)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.optionText, coverQuality === 'hd' && styles.optionTextActive]}>
-              高清
-            </Text>
+            <Text style={[styles.optionText, !darkMode && styles.optionTextActive]}>浅色</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.option, coverQuality === 'normal' && styles.optionActive]}
-            onPress={() => setCoverQuality('normal')}
+            style={[styles.option, darkMode && styles.optionActive]}
+            onPress={() => setDarkMode(true)}
             activeOpacity={0.7}
           >
-            <Text style={[styles.optionText, coverQuality === 'normal' && styles.optionTextActive]}>
-              普通
-            </Text>
+            <Text style={[styles.optionText, darkMode && styles.optionTextActive]}>深色</Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.sectionLabel, { color: theme.textSub }]}>流量</Text>
+        <View style={styles.optionRow}>
+          <TouchableOpacity
+            style={[styles.option, !trafficSaving && styles.optionActive]}
+            onPress={() => setTrafficSaving(false)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.optionText, !trafficSaving && styles.optionTextActive]}>标准</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.option, trafficSaving && styles.optionActive]}
+            onPress={() => setTrafficSaving(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.optionText, trafficSaving && styles.optionTextActive]}>节流</Text>
+          </TouchableOpacity>
+        </View>
+        {trafficSaving && (
+          <Text style={[styles.hint, { color: theme.textSub }]}>
+            封面低画质 · 首页视频不自动播放 · 视频默认 360p
+          </Text>
+        )}
       </View>
 
       {isLoggedIn && (
@@ -91,15 +114,13 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#f4f4f4' },
+  safe: { flex: 1 },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 8,
-    backgroundColor: '#fff',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
   },
   backBtn: { padding: 4, width: 32 },
   spacer: { width: 32 },
@@ -107,20 +128,16 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '600',
-    color: '#212121',
     textAlign: 'center',
   },
   section: {
-    backgroundColor: '#fff',
     marginTop: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#eee',
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#eee',
   },
-  sectionLabel: { fontSize: 13, color: '#999', marginBottom: 10 },
+  sectionLabel: { fontSize: 13, marginBottom: 10 },
   optionRow: { flexDirection: 'row', gap: 10 },
   option: {
     paddingHorizontal: 20,
@@ -128,18 +145,19 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#e0e0e0',
-    backgroundColor: '#fff',
+    backgroundColor: 'transparent',
   },
   optionActive: { borderColor: '#00AEEC', backgroundColor: '#e8f7fd' },
   optionText: { fontSize: 14, color: '#666' },
   optionTextActive: { color: '#00AEEC', fontWeight: '600' },
+  hint: { fontSize: 12, marginTop: 8 },
   versionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  versionLabel: { fontSize: 14, color: '#212121' },
-  versionValue: { fontSize: 14, color: '#999' },
+  versionLabel: { fontSize: 14 },
+  versionValue: { fontSize: 14 },
   updateBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -150,7 +168,6 @@ const styles = StyleSheet.create({
     margin: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#ff4757',
     alignItems: 'center',

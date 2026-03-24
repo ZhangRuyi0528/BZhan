@@ -12,6 +12,7 @@ import type { VideoItem } from "../services/types";
 import { formatCount, formatDuration } from "../utils/format";
 import { coverImageUrl } from "../utils/imageUrl";
 import { useSettingsStore } from "../store/settingsStore";
+import { useTheme } from "../utils/theme";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 14) / 2;
@@ -22,16 +23,17 @@ interface Props {
 }
 
 export const VideoCard = React.memo(function VideoCard({ item, onPress }: Props) {
-  const coverQuality = useSettingsStore(s => s.coverQuality);
+  const trafficSaving = useSettingsStore(s => s.trafficSaving);
+  const theme = useTheme();
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, { backgroundColor: theme.card }]}
       onPress={onPress}
       activeOpacity={0.85}
     >
       <View style={styles.thumbContainer}>
         <Image
-          source={{ uri: coverImageUrl(item.pic, coverQuality) }}
+          source={{ uri: coverImageUrl(item.pic, trafficSaving ? 'normal' : 'hd') }}
           style={styles.thumb}
           resizeMode="cover"
         />
@@ -48,10 +50,10 @@ export const VideoCard = React.memo(function VideoCard({ item, onPress }: Props)
         </View>
       </View>
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
           {item.title}
         </Text>
-        <Text style={styles.owner} numberOfLines={1}>
+        <Text style={[styles.owner, { color: theme.textSub }]} numberOfLines={1}>
           {item.owner?.name ?? ""}
         </Text>
       </View>

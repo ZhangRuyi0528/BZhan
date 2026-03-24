@@ -27,9 +27,11 @@ function formatFileSize(bytes?: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 import { proxyImageUrl } from '../utils/imageUrl';
+import { useTheme } from '../utils/theme';
 
 export default function DownloadsScreen() {
   const router = useRouter();
+  const theme = useTheme();
   const { tasks, loadFromStorage, removeTask } = useDownloadStore();
   const [playingUri, setPlayingUri] = useState<string | null>(null);
   const [playingTitle, setPlayingTitle] = useState('');
@@ -61,12 +63,12 @@ export default function DownloadsScreen() {
   if (done.length > 0) sections.push({ title: '已下载', data: done });
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.topBar}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
+      <View style={[styles.topBar, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#212121" />
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <Text style={styles.topTitle}>我的下载</Text>
+        <Text style={[styles.topTitle, { color: theme.text }]}>我的下载</Text>
         <View style={{ width: 32 }} />
       </View>
 

@@ -22,6 +22,7 @@ import { buildDashMpdUri } from "../utils/dash";
 import { getPlayUrl, getVideoDetail } from "../services/bilibili";
 import { coverImageUrl } from "../utils/imageUrl";
 import { useSettingsStore } from "../store/settingsStore";
+import { useTheme } from "../utils/theme";
 import { formatCount, formatDuration } from "../utils/format";
 import type { VideoItem } from "../services/types";
 
@@ -55,7 +56,8 @@ export const BigVideoCard = React.memo(function BigVideoCard({
   onPress,
 }: Props) {
   const { width: SCREEN_W } = useWindowDimensions();
-  const coverQuality = useSettingsStore(s => s.coverQuality);
+  const trafficSaving = useSettingsStore(s => s.trafficSaving);
+  const theme = useTheme();
   const THUMB_H = SCREEN_W * 0.5625;
   const mediaDimensions = { width: SCREEN_W - 8, height: THUMB_H };
 
@@ -90,7 +92,7 @@ export const BigVideoCard = React.memo(function BigVideoCard({
 
   // Preload: fetch play URL on mount (before card is visible)
   useEffect(() => {
-    if (videoUrl) return;
+    if (videoUrl || trafficSaving) return;
     let cancelled = false;
     (async () => {
       try {
@@ -125,8 +127,8 @@ export const BigVideoCard = React.memo(function BigVideoCard({
   // Pause/resume based on visibility and scroll state
   useEffect(() => {
     if (!videoUrl) return;
-    if (!isVisible) {
-      // Off-screen: pause, mute, show thumbnail
+    if (!isVisible || trafficSaving) {
+      // Off-screen or traffic saving: pause, mute, show thumbnail
       setPaused(true);
       setMuted(true);
       Animated.timing(thumbOpacity, {
@@ -146,10 +148,10 @@ export const BigVideoCard = React.memo(function BigVideoCard({
         useNativeDriver: true,
       }).start();
     }
-  }, [isVisible, isScrolling, videoUrl]);
+  }, [isVisible, isScrolling, videoUrl, trafficSaving]);
 
   const handleVideoReady = () => {
-    if (!isVisible || isScrolling) return;
+    if (!isVisible || isScrolling || trafficSaving) return;
     setPaused(false);
     Animated.timing(thumbOpacity, {
       toValue: 0,
@@ -223,7 +225,7 @@ export const BigVideoCard = React.memo(function BigVideoCard({
   const bufferedRatio = duration > 0 ? clamp(buffered / duration, 0, 1) : 0;
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: theme.card }]}>
       {/* Media area */}
       <View style={[mediaDimensions, { position: "relative" }]}>
         {/* Video player — rendered first so it sits behind the thumbnail */}
@@ -260,7 +262,7 @@ export const BigVideoCard = React.memo(function BigVideoCard({
           pointerEvents="none"
         >
           <Image
-            source={{ uri: coverImageUrl(item.pic, coverQuality) }}
+            source={{ uri: coverImageUrl(item.pic, trafficSaving ? 'normal' : 'hd') }}
             style={mediaDimensions}
             resizeMode="cover"
           />
@@ -338,11 +340,11 @@ export const BigVideoCard = React.memo(function BigVideoCard({
       {/* Info */}
       <TouchableOpacity onPress={onPress} activeOpacity={0.85}>
         <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={2}>
+          <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
             {item.title}
           </Text>
 
-          <Text style={styles.owner} numberOfLines={1}>
+          <Text style={[styles.owner, { color: theme.textSub }]} numberOfLines={1}>
             {item.owner?.name ?? ""}
           </Text>
         </View>

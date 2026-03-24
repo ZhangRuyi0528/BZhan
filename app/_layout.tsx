@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { useAuthStore } from '../store/authStore';
 import { useDownloadStore } from '../store/downloadStore';
 import { useSettingsStore } from '../store/settingsStore';
+import { useTheme } from '../utils/theme';
 import { MiniPlayer } from '../components/MiniPlayer';
 import * as Sentry from '@sentry/react-native';
 import { ErrorBoundary } from '@sentry/react-native';
@@ -21,6 +22,7 @@ function RootLayout() {
   const restore = useAuthStore(s => s.restore);
   const loadDownloads = useDownloadStore(s => s.loadFromStorage);
   const restoreSettings = useSettingsStore(s => s.restore);
+  const darkMode = useSettingsStore(s => s.darkMode);
 
   useEffect(() => {
     restore();
@@ -31,7 +33,7 @@ function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
+      <StatusBar style={darkMode ? 'light' : 'dark'} />
       <View style={{ flex: 1 }}>
         <ErrorBoundary fallback={<Text style={{ padding: 32, textAlign: 'center' }}>发生错误，请重启 App</Text>}>
           <Stack screenOptions={{ headerShown: false }}>

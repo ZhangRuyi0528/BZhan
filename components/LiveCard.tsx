@@ -12,6 +12,7 @@ import { LivePulse } from "./LivePulse";
 import type { LiveRoom } from "../services/types";
 import { formatCount } from "../utils/format";
 import { proxyImageUrl } from "../utils/imageUrl";
+import { useTheme } from "../utils/theme";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 14) / 2;
@@ -30,9 +31,10 @@ export const LiveCard = React.memo(function LiveCard({
   isLivePulse = false,
 }: Props) {
   const cardWidth = fullWidth ? width - 8 : CARD_WIDTH;
+  const theme = useTheme();
   return (
     <TouchableOpacity
-      style={[styles.card, { width: cardWidth }]}
+      style={[styles.card, { width: cardWidth, backgroundColor: theme.card }]}
       onPress={onPress}
       activeOpacity={0.85}
     >
@@ -58,7 +60,7 @@ export const LiveCard = React.memo(function LiveCard({
         </View>
       </View>
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, { color: theme.text }]} numberOfLines={2}>
           {item.title}
         </Text>
         <View style={styles.ownerRow}>
@@ -66,7 +68,7 @@ export const LiveCard = React.memo(function LiveCard({
             source={{ uri: proxyImageUrl(item.face) }}
             style={styles.avatar}
           />
-          <Text style={styles.owner} numberOfLines={1}>
+          <Text style={[styles.owner, { color: theme.textSub }]} numberOfLines={1}>
             {item.uname}
           </Text>
         </View>

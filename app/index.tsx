@@ -40,6 +40,7 @@ import {
 } from "../utils/videoRows";
 import { BigVideoCard } from "../components/BigVideoCard";
 import { FollowedLiveStrip } from "../components/FollowedLiveStrip";
+import { useTheme } from "../utils/theme";
 import type { LiveRoom } from "../services/types";
 
 const HEADER_H = 44;
@@ -83,6 +84,7 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>("hot");
   const [liveAreaId, setLiveAreaId] = useState(0);
 
+  const theme = useTheme();
   const [visibleBigKey, setVisibleBigKey] = useState<string | null>(null);
   const rows = useMemo(() => toListRows(pages, liveRooms), [pages, liveRooms]);
   const pagerRef = useRef<PagerView>(null);
@@ -286,7 +288,7 @@ export default function HomeScreen() {
     activeTab === "hot" ? headerOpacity : liveHeaderOpacity;
 
   return (
-    <SafeAreaView style={styles.safe} edges={["left", "right"]}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} edges={["left", "right"]}>
       {/* 滑动切换容器 */}
       <PagerView
         ref={pagerRef}
@@ -410,6 +412,7 @@ export default function HomeScreen() {
           styles.navBar,
           {
             paddingTop: insets.top,
+            backgroundColor: theme.card,
             transform: [{ translateY: currentHeaderTranslate }],
           },
         ]}
@@ -419,6 +422,7 @@ export default function HomeScreen() {
             styles.header,
             {
               opacity: currentHeaderOpacity,
+              borderBottomColor: theme.border,
             },
           ]}
         >
@@ -439,19 +443,19 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity
-            style={styles.searchBar}
+            style={[styles.searchBar, { backgroundColor: theme.inputBg }]}
             onPress={() => router.push("/search" as any)}
             activeOpacity={0.7}
           >
-            <Ionicons name="search" size={14} color="#999" />
-            <Text style={styles.searchPlaceholder}>搜索视频、UP主...</Text>
+            <Ionicons name="search" size={14} color={theme.textSub} />
+            <Text style={[styles.searchPlaceholder, { color: theme.textSub }]}>搜索视频、UP主...</Text>
           </TouchableOpacity>
           <DownloadProgressBtn
             onPress={() => router.push("/downloads" as any)}
           />
         </Animated.View>
 
-        <View style={styles.tabRow}>
+        <View style={[styles.tabRow, { backgroundColor: theme.card }]}>
           {TABS.map((tab) => (
             <TouchableOpacity
               key={tab.key}
@@ -462,6 +466,7 @@ export default function HomeScreen() {
               <Text
                 style={[
                   styles.tabText,
+                  { color: theme.textSub },
                   activeTab === tab.key && styles.tabTextActive,
                 ]}
               >

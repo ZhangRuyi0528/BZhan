@@ -13,11 +13,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { VideoCard } from '../components/VideoCard';
 import { useSearch } from '../hooks/useSearch';
+import { useTheme } from '../utils/theme';
 import type { VideoItem } from '../services/types';
 
 export default function SearchScreen() {
   const router = useRouter();
   const { keyword, setKeyword, results, loading, hasMore, search, loadMore } = useSearch();
+  const theme = useTheme();
   const inputRef = useRef<TextInput>(null);
 
   const handleSearch = useCallback(() => {
@@ -64,7 +66,7 @@ export default function SearchScreen() {
     return (
       <View style={styles.emptyBox}>
         <Ionicons name="search-outline" size={48} color="#ddd" />
-        <Text style={styles.emptyText}>
+        <Text style={[styles.emptyText, { color: theme.textSub }]}>
           {results.length === 0 && keyword.trim()
             ? '没有找到相关视频'
             : '输入关键词搜索'}
@@ -74,16 +76,16 @@ export default function SearchScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]} edges={['top', 'left', 'right']}>
       {/* Search header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.card, borderBottomColor: theme.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#212121" />
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
         </TouchableOpacity>
-        <View style={styles.inputWrap}>
+        <View style={[styles.inputWrap, { backgroundColor: theme.inputBg }]}>
           <TextInput
             ref={inputRef}
-            style={styles.input}
+            style={[styles.input, { color: theme.text }]}
             placeholder="搜索视频、UP主..."
             placeholderTextColor="#999"
             value={keyword}
